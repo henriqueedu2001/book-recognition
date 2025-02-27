@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import matplotlib.pyplot as plt
 from typing import *
 from numpy.typing import *
 from cv2.typing import *
@@ -7,12 +8,29 @@ from matplotlib.typing import *
 from PIL.Image import Image
 
 class Segmenter:
-    def segment_img(img: Union[ArrayLike, Image, MatLike], alpha: float = 5., beta: float = 1.5):
+    def segment_img(img: Union[ArrayLike, Image, MatLike], alpha: float = 5., beta: float = 1.5) -> List[Union[ArrayLike, Image, MatLike]]:
+        """Segments the input image by books.
+
+        Args:
+            img (Union[ArrayLike, Image, MatLike]): the input image
+            alpha (float, optional): percentage or sequence of percentages for the percentiles to compute. Defaults to 5.
+            beta (float, optional): the sensibility to outliers. Defaults to 1.5.
+
+        Returns:
+            List[Union[ArrayLike, Image, MatLike]]: the images segments
+        """
         gray_img = Segmenter.convert_to_gray(img)
         smooth_img = Segmenter.gaussian_blur(gray_img)
 
         sobel_hor, sobel_ver = Segmenter.sobel(smooth_img, orientation = 0), Segmenter.sobel(smooth_img, orientation = 1)
-        spikes_map_hor, spikes_map_ver = Segmenter.get_spikes_map(sobel_hor, orientation = 0), Segmenter.get_spikes_map(sobel_ver, orientation = 1)
+        sobel_hor_thresh, sobel_ver_thresh = Segmenter.adaptative_threshold(sobel_hor), Segmenter.adaptative_threshold(sobel_ver)
+        
+        fig, axs = plt.subplots(2)
+        axs[0].imshow(sobel_hor_thresh, cmap='gray')
+        axs[1].imshow(sobel_ver_thresh, cmap='gray')
+        fig.savefig(f'temp/threshold', dpi=300)
+
+        spikes_map_hor, spikes_map_ver = Segmenter.get_spikes_map(sobel_hor_thresh, orientation = 0), Segmenter.get_spikes_map(sobel_ver_thresh, orientation = 1)
         spikes_diff_hor, spikes_diff_ver = Segmenter.get_spikes_diff(spikes_map_hor), Segmenter.get_spikes_diff(spikes_map_ver)
 
         orientation = Segmenter.detect_orientation(spikes_diff_hor, spikes_diff_ver)
@@ -110,6 +128,11 @@ class Segmenter:
             sobel_x = cv2.convertScaleAbs(sobel_x) 
             return sobel_x
     
+
+    def adaptative_threshold(img: Union[ArrayLike, Image, MatLike], block_size: int = 11, adjustment_value: int  = 2):
+        adaptative_threshold = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, block_size, adjustment_value)
+        return adaptative_threshold
+
 
     def get_spikes_map(img: Union[ArrayLike, Image, MatLike], orientation: Literal[0, 1] = 0) -> NDArray:
         """Generates a vector s = (s_1, s_2, s_3, ..., s_n), where s_k is bigger when there is an edge on that position.
@@ -213,7 +236,7 @@ class Segmenter:
         return positions
     
 
-    def slice_img(img: Union[ArrayLike, Image, MatLike], slice_pos: list, orientation: Literal[0, 1] = 0) -> List[ArrayLike, Image, MatLike]:
+    def slice_img(img: Union[ArrayLike, Image, MatLike], slice_pos: list, orientation: Literal[0, 1] = 0) -> List[Union[ArrayLike, Image, MatLike]]:
         """Slices the input image with the sequence of slice positions.
 
         Args:
