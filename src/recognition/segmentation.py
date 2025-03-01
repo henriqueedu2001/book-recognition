@@ -129,7 +129,13 @@ class Segmenter:
             return sobel_x
     
 
+    def simple_threshold(img, threshold = 127):
+        _, new_img = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY)
+        return new_img
+    
+
     def adaptative_threshold(img: Union[ArrayLike, Image, MatLike], block_size: int = 11, adjustment_value: int  = 2):
+
         adaptative_threshold = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, block_size, adjustment_value)
         return adaptative_threshold
 
