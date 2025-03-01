@@ -129,13 +129,31 @@ class Segmenter:
             return sobel_x
     
 
-    def simple_threshold(img, threshold = 127):
+    def simple_threshold(img: Union[ArrayLike, Image, MatLike], threshold: int = 127) -> Union[ArrayLike, Image, MatLike]:
+        """Applies a fixed-level threshold to the input image.
+
+        Args:
+            img (Union[ArrayLike, Image, MatLike]): the input image.
+            threshold (int, optional): the threshold value. Defaults to 127.
+
+        Returns:
+            Union[ArrayLike, Image, MatLike]: the output image, with the applied threshold.
+        """
         _, new_img = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY)
         return new_img
     
 
-    def adaptative_threshold(img: Union[ArrayLike, Image, MatLike], block_size: int = 11, adjustment_value: int  = 2):
+    def adaptative_threshold(img: Union[ArrayLike, Image, MatLike], block_size: int = 11, adjustment_value: int  = 2) -> Union[ArrayLike, Image, MatLike]:
+        """Applies an adaptive threshold to the input image.
 
+        Args:
+            img (Union[ArrayLike, Image, MatLike]): the input image.
+            block_size (int, optional): the block size. Defaults to 11.
+            adjustment_value (int, optional): the adjustment value. Defaults to 2.
+
+        Returns:
+            Union[ArrayLike, Image, MatLike]: the output image, with the applied threshold.
+        """
         adaptative_threshold = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, block_size, adjustment_value)
         return adaptative_threshold
 
